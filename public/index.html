@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="light"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%E2%9B%AA%3C/text%3E%3C/svg%3E">
+<title>Church Management System</title>
+<style>
+/* Layout: sidebar + content workspace, kept from the church's existing design. Single light look. */
+:root{--blue:#dff3ff;--dark:#12618a;--accent:#1789bd;--white:#fff;--text:#173042;--border:#b9d8e7;--muted:#587080;--ok:#1b7f4b;--warn:#a86a00;--bad:#c0392b}
+*{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:var(--blue);color:var(--text)}
+header{background:linear-gradient(135deg,#0e648d,#24a0d1);color:white;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+header h1{margin:0;font-size:22px}.hdr-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.chip{font-size:12px;background:#ffffff26;border:1px solid #ffffff55;border-radius:999px;padding:5px 10px;color:#fff}
+.app{display:flex;min-height:calc(100vh - 70px)}
+aside{width:225px;background:#fff;border-right:1px solid var(--border);padding:12px}
+nav button{display:block;width:100%;padding:12px 14px;margin:5px 0;border:0;border-radius:8px;background:white;text-align:left;color:var(--text);cursor:pointer;font-size:14px}
+nav button:hover,nav button.active{background:#d8f1fc;color:#075a80;font-weight:bold}
+main{flex:1;min-width:0;padding:22px;overflow:auto}.page{display:none}.page.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:20px}
+.card,.panel{background:white;border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:0 2px 8px #0b52701a;color:var(--text)}
+.card b{font-size:28px;color:var(--dark)}.card span{display:block;margin-top:7px;color:var(--muted)}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.toolbar>*{padding:9px;border:1px solid var(--border);border-radius:7px}
+button{font:inherit;font-size:14px;color:var(--text);background:#fff;border:1px solid var(--border);border-radius:7px;padding:8px 12px;cursor:pointer}
+button.primary,label.primary{background:var(--accent);color:#fff;border:0;cursor:pointer}button.danger{background:var(--bad);color:#fff;border:0;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #0e648d66;outline-offset:1px}
+input,select,textarea{width:100%;padding:9px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--text);font:inherit}
+table{width:100%;border-collapse:collapse;background:white}th,td{padding:9px;border-bottom:1px solid #dbeaf1;text-align:left;font-size:13px}th{background:#e9f8fe}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.field label{display:block;font-size:12px;margin-bottom:4px;font-weight:bold}
+.form-actions{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}.small{font-size:12px;color:#637985}
+@media(max-width:760px){aside{width:65px;padding:6px}nav button{font-size:0;text-align:center}nav button::first-letter{font-size:18px}main{padding:12px}header{padding:14px}}
+.front-login{position:fixed;inset:0;background:linear-gradient(135deg,#dff4ff,#bfe9fa);display:flex;align-items:center;justify-content:center;z-index:9999}.login-box{width:min(420px,92%);background:white;border-radius:18px;padding:30px;text-align:center;box-shadow:0 8px 30px #18556b33;color:var(--text)}.login-logo{width:110px;height:110px;border-radius:50%;object-fit:contain;border:2px solid #b8dbea;margin-bottom:10px;background:#fff}.login-box input{margin:6px 0}
+.dlg{position:fixed;inset:0;background:#0b2a3a88;display:flex;align-items:center;justify-content:center;z-index:10001;padding:16px}
+.dlgbox{background:#fff;border-radius:14px;padding:22px;width:min(420px,100%);box-shadow:0 10px 40px #0b2a3a55;color:var(--text)}.dlgbox p{margin:0 0 10px;line-height:1.4}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#12384d;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:10002;max-width:92%;text-align:center}
+.tablewrap{overflow:auto}
+.tabs{display:flex;gap:6px;margin:6px 0 10px}.tabs button{flex:1;border-radius:8px}.tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:#e9f8fe;color:var(--dark);border:1px solid var(--border)}.badge.ok{background:#e4f6ec;color:var(--ok);border-color:#b7e2c8}
+.code-big{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:26px;letter-spacing:2px;text-align:center;background:#e9f8fe;border:1px dashed var(--accent);border-radius:10px;padding:12px;margin:8px 0;user-select:all}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}.kv div{background:#f4fbff;border:1px solid var(--border);border-radius:8px;padding:10px}.kv span{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+[hidden]{display:none!important}
+</style></head><body>
+
+<div id="frontLogin" class="front-login"><div class="login-box"><img id="frontLogo" class="login-logo" alt="Church logo"><h2 id="frontChurch">Church Management System</h2><p>Church Management System</p><div class="tabs"><button id="tabMember" class="on" onclick="loginTab('member')">Member login</button><button id="tabStaff" onclick="loginTab('staff')">Staff login</button></div>
+<div id="memberLogin"><input id="mId" placeholder="Member ID (e.g. M0001)" autocomplete="username" autocapitalize="characters"><input id="mCode" placeholder="Access code (e.g. K7QM-4TX2)" autocomplete="off" autocapitalize="characters"><button class="primary" onclick="doMemberLogin()" style="width:100%;margin-top:8px">Log In</button><p class="small">Your access code is given to you by the church administrator.</p></div>
+<div id="staffLogin" hidden><input id="loginUser" placeholder="Username" autocomplete="username"><input id="loginPass" type="password" placeholder="Password" autocomplete="current-password"><button class="primary" onclick="doLogin()" style="width:100%;margin-top:8px">Log In</button></div>
+<p id="loginMsg" class="small" style="color:var(--bad);min-height:16px"></p></div></div>
+<header><h1>⛪ Church Management System</h1><div class="hdr-right"><span id="syncStatus" class="chip">Connecting…</span><div id="clock"></div><button onclick="logout()">Logout</button></div></header>
+<div class="app">
+<aside><nav id="nav">
+<button data-page="portal" id="navPortal" hidden>🙋 My Portal</button>
+<button data-page="dashboard">🏠 Dashboard</button>
+<button data-page="members">👥 Members</button>
+<button data-page="groups">🧑‍🤝‍🧑 Generational Groups</button>
+<button data-page="attendance">✓ Attendance</button>
+<button data-page="finances">💰 Finances</button>
+<button data-page="documents">📁 Documents</button>
+<button data-page="reports">📊 Reports</button>
+<button data-page="users">🔐 Users</button><button data-page="settings">⚙ Settings</button>
+</nav></aside>
+<main>
+<section id="portal" class="page"><h2>My Portal</h2><div class="panel"><div id="portalBody"></div></div></section>
+<section id="dashboard" class="page active">
+<h2>Dashboard</h2><div class="cards">
+<div class="card"><b id="mCount">0</b><span>Total Members</span></div>
+<div class="card"><b id="gCount">0</b><span>Generational Groups</span></div>
+<div class="card"><b id="aCount">0</b><span>Attendance Records</span></div>
+<div class="card"><b id="income">0.00</b><span>Total Income</span></div>
+<div class="card"><b id="expense">0.00</b><span>Total Expenditure</span></div>
+</div><div class="panel"><h3>Quick Start</h3><p>Add your generational groups, register members, record attendance and enter financial transactions. Every change is saved on the church server straight away, so the same records show on every device.</p></div>
+</section>
+
+<section id="members" class="page"><h2>Membership Register</h2>
+<div class="panel">
+<div class="toolbar"><input id="memberSearch" placeholder="Search name, phone, residence, occupation..." style="flex:1;min-width:200px;width:auto"><select id="groupFilter" style="width:auto"></select><select id="resFilter" style="width:auto"></select><select id="occFilter" style="width:auto"></select><button class="primary" onclick="exportMembers()">Export Excel/CSV</button><label class="primary" style="padding:9px;cursor:pointer">Import CSV <input id="importFile" type="file" accept=".csv" style="display:none"></label></div>
+<div class="toolbar"><button class="primary" onclick="showMemberForm()">+ Add Member</button><button onclick="downloadTemplate()">Download Import Template</button><button onclick="bulkCodes()">Create missing access codes</button></div>
+<div id="memberForm" class="panel" hidden><h3>Member Details</h3><div class="grid">
+<div class="field"><label for="f_id">Member ID</label><input id="f_id"></div><div class="field"><label for="f_name">Full Name</label><input id="f_name"></div>
+<div class="field"><label for="f_gender">Gender</label><select id="f_gender"><option>Male</option><option>Female</option><option>Other</option></select></div>
+<div class="field"><label for="f_dob">Date of Birth</label><input id="f_dob" type="date"></div><div class="field"><label for="f_phone">Phone</label><input id="f_phone"></div>
+<div class="field"><label for="f_res">Place of Residence</label><input id="f_res"></div><div class="field"><label for="f_occ">Occupation</label><input id="f_occ"></div>
+<div class="field"><label for="f_group">Generational Group</label><select id="f_group"></select></div><div class="field"><label for="f_marital">Marital Status</label><select id="f_marital"><option>Single</option><option>Married</option><option>Widowed</option><option>Divorced</option></select></div>
+<div class="field"><label for="f_joined">Date Joined</label><input id="f_joined" type="date"></div>
+</div><div class="form-actions"><button class="primary" onclick="saveMember()">Save Member</button><button onclick="hideMemberForm()">Cancel</button></div></div>
+<div class="tablewrap"><table><thead><tr><th>ID</th><th>Name</th><th>Gender</th><th>Phone</th><th>Residence</th><th>Occupation</th><th>Group</th><th>Access code</th><th>Actions</th></tr></thead><tbody id="memberRows"></tbody></table></div>
+</div></section>
+
+<section id="groups" class="page"><h2>Generational Groups</h2><div class="panel"><div class="toolbar"><input id="newGroup" placeholder="Group name" style="flex:1;width:auto"><button class="primary" onclick="addGroup()">Add Group</button></div><div class="tablewrap"><table><thead><tr><th>Group</th><th>Members</th><th>Action</th></tr></thead><tbody id="groupRows"></tbody></table></div></div></section>
+
+<section id="attendance" class="page"><h2>Attendance</h2><div class="panel"><div class="grid">
+<div><label for="attDate">Date</label><input id="attDate" type="date"></div><div><label for="attService">Service</label><input id="attService" placeholder="Sunday Service"></div></div><div class="toolbar"><button class="primary" onclick="recordAttendance()">Record Present Members</button><button onclick="exportAttendance()">Export Attendance</button></div><p class="small">Select the members who are present.</p><div class="tablewrap"><table><thead><tr><th>Present</th><th>Member</th><th>Group</th></tr></thead><tbody id="attRows"></tbody></table></div><h3>Attendance Records</h3><div id="attHistory" class="tablewrap"></div></div></section>
+
+<section id="finances" class="page"><h2>Finances</h2><div class="panel"><div class="grid">
+<div><label for="finDate">Date</label><input id="finDate" type="date"></div><div><label for="finType">Type</label><select id="finType"><option>Income</option><option>Expenditure</option></select></div>
+<div><label for="finCat">Category</label><input id="finCat" placeholder="Tithe / Offering / Rent..."></div><div><label for="finAmount">Amount</label><input id="finAmount" type="number" step="0.01"></div><div><label for="finDesc">Description</label><input id="finDesc"></div></div><div class="form-actions"><button class="primary" onclick="addFinance()">Save Transaction</button></div><hr><div class="tablewrap"><table><thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Amount</th><th>Description</th><th></th></tr></thead><tbody id="finRows"></tbody></table></div></div></section>
+
+<section id="documents" class="page"><h2>Documents</h2><div class="panel"><p>Document register (file names and descriptions are stored here; the files themselves are not uploaded).</p><input id="docFile" type="file"><input id="docDesc" placeholder="Description" style="margin-top:8px"><button class="primary" onclick="addDoc()" style="margin-top:8px">Add Document</button><div class="tablewrap"><table style="margin-top:15px"><thead><tr><th>File</th><th>Description</th><th>Date</th><th></th></tr></thead><tbody id="docRows"></tbody></table></div></div></section>
+
+<section id="reports" class="page"><h2>Reports</h2><div class="panel"><button class="primary" onclick="exportMembers()">Export Membership Register</button> <button onclick="exportAttendance()">Export Attendance</button><h3>Membership by Group</h3><div id="groupReport" class="tablewrap"></div><h3>Membership by Residence</h3><div id="resReport" class="tablewrap"></div><h3>Membership by Occupation</h3><div id="occReport" class="tablewrap"></div></div></section>
+
+<section id="users" class="page"><h2>User Accounts</h2><div class="panel"><p class="small">Administrators can create staff accounts. New accounts must choose their own password at first login. Staff passwords are stored only as salted hashes on the server.</p><div class="grid"><div><label for="newUser">Username</label><input id="newUser"></div><div><label for="newPass">Password</label><input id="newPass" type="password"></div><div><label for="newRole">Role</label><select id="newRole"><option>User</option><option>Administrator</option></select></div></div><button class="primary" onclick="createUser()" style="margin-top:10px">Create Account</button><div class="tablewrap"><table><thead><tr><th>Username</th><th>Role</th><th></th></tr></thead><tbody id="userRows"></tbody></table></div></div></section>
+
+<section id="settings" class="page"><h2>Settings</h2>
+<div class="panel"><h3>Church Identity</h3><label for="logoUpload">Church Logo</label><input id="logoUpload" type="file" accept="image/*"><p class="small">Upload a PNG/JPG logo. It appears on the front/login page.</p><div class="grid"><div><label for="churchName">Church Name</label><input id="churchName"></div><div><label for="currency">Currency</label><input id="currency" value="GHS"></div></div><button class="primary" onclick="saveSettings()" style="margin-top:10px">Save Settings</button></div>
+<div class="panel" style="margin-top:14px"><h3>Backup</h3><p class="small">Everything is saved on the server automatically. Download a backup file now and then and keep it somewhere safe, such as your phone or a flash drive. Backups contain members' details and finances, so keep them private.</p><div class="form-actions"><button class="primary" onclick="backupNow()">Download backup (.json)</button><label class="primary" style="padding:8px 12px;border-radius:7px;cursor:pointer">Restore from backup <input id="restoreFile" type="file" accept=".json,application/json" style="display:none"></label></div></div>
+<div class="panel" style="margin-top:14px"><h3>Activity log</h3><p class="small">The latest 100 actions by staff and members.</p><div class="tablewrap"><table><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Detail</th></tr></thead><tbody id="auditRows"></tbody></table></div></div>
+<div class="panel" style="margin-top:14px"><h3>Danger zone</h3><button class="danger" onclick="clearData()">Clear All Data</button></div>
+</section>
+</main></div>
+<div id="dlg" class="dlg" hidden><div class="dlgbox"><p id="dlgMsg"></p><div id="dlgBig" class="code-big" hidden></div><input id="dlgInput" hidden><div class="form-actions"><button class="primary" id="dlgOk">OK</button><button id="dlgCancel">Cancel</button></div></div></div>
+<div id="toast" hidden></div>
+<script>
+const $=id=>document.getElementById(id);
+const CACHE='cmsCacheV2';
+let S={members:[],groups:[],attendance:[],finance:[],documents:[],settings:{churchName:'Church Management System',currency:'GHS',logo:''},users:[],audit:[]};
+let me=null,portal=null,offline=false,busy=0;
+
+/* ---------- api ---------- */
+async function api(method,url,body){
+ let r;try{r=await fetch(url,{method,headers:Object.assign({'X-Requested-With':'church'},body!==undefined?{'Content-Type':'application/json'}:{}),body:body!==undefined?JSON.stringify(body):undefined,credentials:'same-origin'})}catch(e){setStatus('offline');const x=new Error('Cannot reach the server. Check your internet connection and try again.');x.net=true;throw x}
+ let d={};try{d=await r.json()}catch(e){}
+ if(!r.ok){const x=new Error(d.error||'Something went wrong');x.status=r.status;if(r.status===401&&me&&url!=='/api/login/staff'&&url!=='/api/login/member'){sessionEnded()}throw x}
+ setStatus('ok');return d}
+function setStatus(k){const el=$('syncStatus');if(k==='ok'){offline=false;el.textContent='Saved on server';el.style.background=''}else if(k==='offline'){offline=true;el.textContent='Offline: showing last saved copy (read only)'}else if(k==='saving'){el.textContent='Saving…'}else el.textContent=k}
+async function act(fn,okMsg){if(offline&&me&&me.kind==='staff'){toast('You are offline. Reconnect to save changes.');return false}
+ setStatus('saving');try{await fn();await loadState();if(okMsg)toast(okMsg);return true}catch(e){toast(e.message);setStatus(e.net?'offline':'ok');return false}}
+function sessionEnded(){me=null;$('frontLogin').hidden=false;$('loginMsg').textContent='Your session has ended. Please log in again.';applyRole()}
+
+/* ---------- dialogs ---------- */
+let toastTimer;
+function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.hidden=true,3600)}
+function dialog(msg,o={}){return new Promise(res=>{const d=$('dlg'),inp=$('dlgInput');$('dlgMsg').textContent=msg;$('dlgBig').hidden=!o.big;$('dlgBig').textContent=o.big||'';inp.hidden=!o.input;inp.type=o.password?'password':'text';inp.value=o.def||'';$('dlgCancel').hidden=!!o.noCancel;$('dlgOk').textContent=o.ok||'OK';d.hidden=false;(o.input?inp:$('dlgOk')).focus();
+const done=v=>{d.hidden=true;$('dlgOk').onclick=$('dlgCancel').onclick=inp.onkeydown=null;res(v)};
+$('dlgOk').onclick=()=>done(o.input?inp.value:true);$('dlgCancel').onclick=()=>done(o.input?null:false);inp.onkeydown=e=>{if(e.key==='Enter')done(inp.value);if(e.key==='Escape')done(null)}})}
+const askConfirm=m=>dialog(m,{ok:'Yes, continue'});const askPrompt=(m,d,pw)=>dialog(m,{input:true,def:d,password:pw});
+
+/* ---------- login / session ---------- */
+function loginTab(t){$('memberLogin').hidden=t!=='member';$('staffLogin').hidden=t!=='staff';$('tabMember').classList.toggle('on',t==='member');$('tabStaff').classList.toggle('on',t==='staff');$('loginMsg').textContent=''}
+async function loadPublic(){try{const p=await api('GET','/api/public');S.settings.churchName=p.churchName;S.settings.logo=p.logo;setFrontLogo()}catch(e){}}
+function setFrontLogo(){let src=S.settings.logo||'data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><circle cx="100" cy="100" r="92" fill="white" stroke="#147eaa" stroke-width="6"/><path d="M100 35v120M55 80h90" stroke="#147eaa" stroke-width="14" stroke-linecap="round"/></svg>');$('frontLogo').src=src;$('frontChurch').textContent=S.settings.churchName||'Church Management System'}
+async function afterLogin(r){me=r;$('loginMsg').textContent='';['loginPass','mCode'].forEach(i=>$(i).value='');
+ if(me.kind==='staff'&&me.mustChange){await forceChange();if(!me)return}
+ $('frontLogin').hidden=true;await boot()}
+async function forceChange(){let cur=$('loginPass').value||'';
+ while(true){const c=await dialog('Please choose your own password before continuing. First enter your current (temporary) password.',{input:true,password:true,noCancel:true,ok:'Next'});if(c===null)continue;
+  const n=await dialog('Enter a new password of at least 8 characters.',{input:true,password:true,noCancel:true,ok:'Save password'});if(n===null)continue;
+  try{await api('POST','/api/me/password',{current:c,password:n});me.mustChange=false;toast('Password changed');return}catch(e){await dialog(e.message,{noCancel:true})}}}
+async function doLogin(){const u=$('loginUser').value.trim(),p=$('loginPass').value;if(!u||!p)return $('loginMsg').textContent='Enter your username and password.';
+ try{await afterLogin(await api('POST','/api/login/staff',{username:u,password:p}))}catch(e){$('loginMsg').textContent=e.message}}
+async function doMemberLogin(){const id=$('mId').value.trim(),code=$('mCode').value.trim();if(!id||!code)return $('loginMsg').textContent='Enter your member ID and access code.';
+ try{await afterLogin(await api('POST','/api/login/member',{id,code}))}catch(e){$('loginMsg').textContent=e.message}}
+['mId','mCode'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')doMemberLogin()}));
+['loginUser','loginPass'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()}));
+async function logout(){try{await api('POST','/api/logout',{})}catch(e){}try{localStorage.removeItem(CACHE)}catch(e){}me=null;portal=null;S.members=[];S.finance=[];S.attendance=[];S.users=[];S.audit=[];S.documents=[];['loginUser','loginPass','mId','mCode'].forEach(i=>$(i).value='');$('loginMsg').textContent='';$('frontLogin').hidden=false;applyRole();loadPublic()}
+const isAdmin=()=>!!me&&me.kind==='staff'&&me.role==='Administrator';
+function showPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(p).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===p))}
+function applyRole(){const member=!!me&&me.kind==='member',admin=isAdmin();
+ document.querySelectorAll('nav button').forEach(b=>{const p=b.dataset.page;b.hidden=!me||(member?p!=='portal':(p==='portal'||((p==='users'||p==='settings')&&!admin)))});
+ const cur=document.querySelector('.page.active');let target='dashboard';if(member)target='portal';else if(me&&cur&&!document.querySelector('nav [data-page="'+cur.id+'"]').hidden)target=cur.id;showPage(target);
+ document.querySelector('header .chip').hidden=member;render()}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+
+/* ---------- loading ---------- */
+async function loadState(){if(!me)return;
+ if(me.kind==='member'){portal=await api('GET','/api/portal');render();return}
+ try{const d=await api('GET','/api/state');S=Object.assign({users:[],audit:[]},d);try{localStorage.setItem(CACHE,JSON.stringify({at:Date.now(),name:me.name,state:S}))}catch(e){}}
+ catch(e){if(e.net){try{const c=JSON.parse(localStorage.getItem(CACHE)||'null');if(c&&c.name===me.name)S=c.state}catch(x){}}else throw e}
+ render()}
+async function boot(){try{await loadState()}catch(e){toast(e.message)}applyRole()}
+async function start(){try{const r=await api('GET','/api/me');me=r;if(me.kind==='staff'&&me.mustChange){await forceChange()}$('frontLogin').hidden=true;await boot()}catch(e){me=null;$('frontLogin').hidden=false;loadPublic()}}
+
+/* ---------- render ---------- */
+function money(n){return (S.settings.currency||'GHS')+' '+Number(n).toFixed(2)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function js(s){return String(s).replaceAll('\\','\\\\').replaceAll("'","\\'")}
+function render(){setFrontLogo();document.querySelector('header h1').textContent='⛪ '+(S.settings.churchName||'Church Management System');
+ if(!me||me.kind==='member'){renderPortal();return}
+ renderGroups();renderMembers();renderAttendance();renderFinance();renderDocs();renderReports();renderUsers();renderAudit();
+ if(document.activeElement!==$('churchName'))$('churchName').value=S.settings.churchName||'';if(document.activeElement!==$('currency'))$('currency').value=S.settings.currency||'GHS';
+ $('mCount').textContent=S.members.length;$('gCount').textContent=S.groups.length;$('aCount').textContent=S.attendance.length;
+ $('income').textContent=money(S.finance.filter(x=>x.type==='Income').reduce((a,x)=>a+Number(x.amount),0));$('expense').textContent=money(S.finance.filter(x=>x.type==='Expenditure').reduce((a,x)=>a+Number(x.amount),0))}
+function renderGroups(){const gf=$('groupFilter').value,fg=$('f_group').value;$('groupFilter').innerHTML='<option value="">All groups</option>'+S.groups.map(g=>`<option>${esc(g)}</option>`).join('');$('groupFilter').value=gf;$('f_group').innerHTML=S.groups.map(g=>`<option>${esc(g)}</option>`).join('');if(fg)$('f_group').value=fg;
+ $('groupRows').innerHTML=S.groups.map(g=>`<tr><td>${esc(g)}</td><td>${S.members.filter(m=>m.group===g).length}</td><td><button onclick="renameGroup('${js(g)}')">Rename</button> <button onclick="deleteGroup('${js(g)}')">Delete</button></td></tr>`).join('')}
+function renderMembers(){let q=($('memberSearch').value||'').toLowerCase(),g=$('groupFilter').value||'',r=$('resFilter').value||'',o=$('occFilter').value||'';
+ let ms=S.members.filter(m=>(!q||[m.id,m.name,m.phone,m.res,m.occ,m.group].join(' ').toLowerCase().includes(q))&&(!g||m.group===g)&&(!r||m.res===r)&&(!o||m.occ===o));
+ $('memberRows').innerHTML=ms.map(m=>`<tr><td>${esc(m.id)}</td><td>${esc(m.name)}</td><td>${esc(m.gender)}</td><td>${esc(m.phone)}</td><td>${esc(m.res)}</td><td>${esc(m.occ)}</td><td>${esc(m.group)}</td><td>${m.hasCode?'<span class="badge ok">Active</span>':'<span class="badge">None</span>'}</td><td><button onclick="editMember('${js(m.id)}')">Edit</button> <button onclick="delMember('${js(m.id)}')">Delete</button>${isAdmin()?` <button onclick="setCode('${js(m.id)}')">${m.hasCode?'Reset code':'Create code'}</button>${m.hasCode?` <button onclick="revokeCode('${js(m.id)}')">Remove code</button>`:''}`:''}</td></tr>`).join('');
+ const uniq=k=>[...new Set(S.members.map(m=>m[k]).filter(Boolean))].sort();$('resFilter').innerHTML='<option value="">All residences</option>'+uniq('res').map(x=>`<option>${esc(x)}</option>`).join('');$('occFilter').innerHTML='<option value="">All occupations</option>'+uniq('occ').map(x=>`<option>${esc(x)}</option>`).join('');$('resFilter').value=r;$('occFilter').value=o}
+['memberSearch','groupFilter','resFilter','occFilter'].forEach(id=>$(id).addEventListener('input',renderMembers));
+function renderAttendance(){const checked=new Set([...document.querySelectorAll('.present:checked')].map(x=>x.dataset.id));$('attRows').innerHTML=S.members.map(m=>`<tr><td><input type="checkbox" class="present" data-id="${esc(m.id)}" ${checked.has(m.id)?'checked':''} style="width:auto"></td><td>${esc(m.name)}</td><td>${esc(m.group)}</td></tr>`).join('');
+ $('attHistory').innerHTML='<table><tr><th>Date</th><th>Service</th><th>Present</th><th></th></tr>'+S.attendance.slice().reverse().map(a=>`<tr><td>${esc(a.date)}</td><td>${esc(a.service)}</td><td>${a.ids.length}</td><td>${isAdmin()?`<button onclick="delAtt(${a.id})">Delete</button>`:''}</td></tr>`).join('')+'</table>'}
+function renderFinance(){$('finRows').innerHTML=S.finance.slice().reverse().map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.type)}</td><td>${esc(x.cat)}</td><td>${money(x.amount)}</td><td>${esc(x.desc)}</td><td><button onclick="delFin(${x.id})">Delete</button></td></tr>`).join('')}
+function renderDocs(){$('docRows').innerHTML=S.documents.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.desc)}</td><td>${esc(x.date)}</td><td><button onclick="delDoc(${x.id})">Delete</button></td></tr>`).join('')}
+function report(k){let o={};S.members.forEach(m=>o[m[k]||'Not specified']=(o[m[k]||'Not specified']||0)+1);return '<table><tr><th>Value</th><th>Members</th></tr>'+Object.entries(o).sort((a,b)=>b[1]-a[1]).map(x=>`<tr><td>${esc(x[0])}</td><td>${x[1]}</td></tr>`).join('')+'</table>'}
+function renderReports(){$('groupReport').innerHTML=report('group');$('resReport').innerHTML=report('res');$('occReport').innerHTML=report('occ')}
+function renderUsers(){$('userRows').innerHTML=(S.users||[]).map(x=>`<tr><td>${esc(x.username)}</td><td>${esc(x.role)}${x.mustChange?' <span class="badge">must change password</span>':''}</td><td><button onclick="resetUserPass('${js(x.username)}')">Set password</button> ${x.username!==me.name?`<button onclick="delUser('${js(x.username)}')">Delete</button>`:''}</td></tr>`).join('')}
+function renderAudit(){$('auditRows').innerHTML=(S.audit||[]).map(a=>`<tr><td>${esc(a.at.replace('T',' ').slice(0,16))}</td><td>${esc(a.actor)}</td><td>${esc(a.action)}</td><td>${esc(a.detail)}</td></tr>`).join('')}
+function renderPortal(){const b=$('portalBody');if(!me||me.kind!=='member'||!portal){b.innerHTML='';return}const m=portal.member,rec=portal.attendance,rate=portal.totalServices?Math.round(rec.length/portal.totalServices*100):0;
+ const f=(l,v)=>`<div><span>${l}</span>${esc(v||'—')}</div>`;
+ b.innerHTML=`<h3>Welcome, ${esc(m.name)}</h3><div class="kv">${f('Member ID',m.id)}${f('Generational group',m.group)}${f('Phone',m.phone)}${f('Place of residence',m.res)}${f('Occupation',m.occ)}${f('Marital status',m.marital)}${f('Date joined',m.joined)}${f('Services attended',rec.length+' of '+portal.totalServices+' ('+rate+'%)')}</div><h3>My attendance</h3><div class="tablewrap"><table><tr><th>Date</th><th>Service</th></tr>${rec.map(a=>`<tr><td>${esc(a.date)}</td><td>${esc(a.service)}</td></tr>`).join('')||'<tr><td colspan="2">No attendance recorded yet.</td></tr>'}</table></div><p class="small">If any detail above is wrong, please tell the church administrator.</p>`}
+
+/* ---------- actions ---------- */
+function addGroup(){const g=$('newGroup').value.trim();if(!g)return;act(()=>api('POST','/api/groups',{name:g}),'Group added').then(ok=>{if(ok)$('newGroup').value=''})}
+async function renameGroup(g){const n=await askPrompt('New group name:',g);if(n&&n.trim())act(()=>api('PUT','/api/groups/'+encodeURIComponent(g),{name:n.trim()}),'Group renamed')}
+async function deleteGroup(g){if(await askConfirm('Delete this group? Members will keep their current group label.'))act(()=>api('DELETE','/api/groups/'+encodeURIComponent(g)),'Group deleted')}
+function nextId(){let mx=0;S.members.forEach(m=>{const k=/^M(\d+)$/.exec(m.id||'');if(k)mx=Math.max(mx,+k[1])});return 'M'+String(mx+1).padStart(4,'0')}
+function showMemberForm(){$('memberForm').hidden=false;['name','dob','phone','res','occ','joined'].forEach(k=>$('f_'+k).value='');$('f_id').value=nextId();$('f_name').focus()}
+function hideMemberForm(){$('memberForm').hidden=true}
+async function saveMember(){const m={id:$('f_id').value.trim(),name:$('f_name').value.trim(),gender:$('f_gender').value,dob:$('f_dob').value,phone:$('f_phone').value.trim(),res:$('f_res').value.trim(),occ:$('f_occ').value.trim(),group:$('f_group').value,marital:$('f_marital').value,joined:$('f_joined').value};if(!m.name)return toast('Enter member name');if(await act(()=>api('POST','/api/members',m),'Member saved'))hideMemberForm()}
+function editMember(id){const m=S.members.find(x=>x.id===id);if(!m)return;$('memberForm').hidden=false;Object.entries({id:m.id,name:m.name,gender:m.gender,dob:m.dob,phone:m.phone,res:m.res,occ:m.occ,group:m.group,marital:m.marital,joined:m.joined}).forEach(([k,v])=>{if($('f_'+k))$('f_'+k).value=v||''});$('memberForm').scrollIntoView()}
+async function delMember(id){if(await askConfirm('Delete this member?'))act(()=>api('DELETE','/api/members/'+encodeURIComponent(id)),'Member deleted')}
+async function setCode(id){const m=S.members.find(x=>x.id===id);if(!m)return;if(m.hasCode&&!await askConfirm('This replaces the current code for '+m.name+'. The old code will stop working. Continue?'))return;
+ let code;if(!await act(async()=>{code=(await api('POST','/api/members/'+encodeURIComponent(id)+'/code',{})).code}))return;
+ await dialog('Access code for '+m.name+' ('+m.id+'). It cannot be shown again, so give it to the member now.',{ok:'Done',noCancel:true,big:code})}
+async function revokeCode(id){const m=S.members.find(x=>x.id===id);if(m&&await askConfirm('Remove the access code of '+m.name+'? They will no longer be able to log in.'))act(()=>api('DELETE','/api/members/'+encodeURIComponent(id)+'/code'),'Access code removed')}
+async function bulkCodes(){if(!isAdmin())return toast('Only an administrator can create access codes');const n=S.members.filter(m=>!m.hasCode).length;if(!n)return toast('Every member already has a code');
+ if(!await askConfirm('Create access codes for '+n+' members? You will get a file listing the codes. Save it safely, because codes cannot be shown again.'))return;
+ let codes;if(!await act(async()=>{codes=(await api('POST','/api/codes/bulk',{})).codes}))return;saveFile('member-access-codes.csv',csv([['Member ID','Full Name','Phone','Access code'],...codes.map(c=>[c.id,c.name,c.phone,c.code])]))}
+function csv(rows){return rows.map(r=>r.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(',')).join('\n')}
+async function saveFile(name,text){let dl=null;try{dl=window.claude&&claude.use?await claude.use('downloads'):null}catch(e){}
+ if(dl){try{await dl.save({filename:name,data:text});toast('File ready: '+name)}catch(e){if(!e||e.code!=='declined')toast('Could not save the file here')}return}
+ try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/plain'}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}catch(e){toast('Download is not available here')}}
+function exportMembers(){saveFile('membership_register.csv',csv([['Member ID','Full Name','Gender','Date of Birth','Phone','Place of Residence','Occupation','Generational Group','Marital Status','Date Joined'],...S.members.map(m=>[m.id,m.name,m.gender,m.dob,m.phone,m.res,m.occ,m.group,m.marital,m.joined])]))}
+function downloadTemplate(){saveFile('membership_import_template.csv','Member ID,Full Name,Gender,Date of Birth,Phone,Place of Residence,Occupation,Generational Group,Marital Status,Date Joined\n')}
+function parseCSV(t){const rows=[];let r=[],c='',q=false;for(let i=0;i<t.length;i++){const ch=t[i];if(q){if(ch==='"'){if(t[i+1]==='"'){c+='"';i++}else q=false}else c+=ch}else if(ch==='"')q=true;else if(ch===','){r.push(c);c=''}else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;r.push(c);c='';rows.push(r);r=[]}else c+=ch}if(c!==''||r.length){r.push(c);rows.push(r)}return rows.filter(x=>x.some(v=>v.trim()))}
+$('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const rows=parseCSV(String(rd.result).replace(/^﻿/,''));rows.shift();
+ const list=rows.map(a=>({id:(a[0]||'').trim(),name:(a[1]||'').trim(),gender:a[2]||'',dob:a[3]||'',phone:a[4]||'',res:a[5]||'',occ:a[6]||'',group:a[7]||'',marital:a[8]||'',joined:a[9]||''})).filter(m=>m.name);
+ if(!list.length)return toast('No members found in that file');let nx=0;S.members.forEach(m=>{const k=/^M(\d+)$/.exec(m.id);if(k)nx=Math.max(nx,+k[1])});list.forEach(m=>{if(!m.id)m.id='M'+String(++nx).padStart(4,'0')});
+ act(()=>api('POST','/api/members/bulk',{members:list}),'Imported '+list.length+' members');e.target.value=''};rd.readAsText(f)};
+$('attDate').value=new Date().toISOString().slice(0,10);
+function recordAttendance(){const ids=[...document.querySelectorAll('.present:checked')].map(x=>x.dataset.id);if(!ids.length)return toast('Tick at least one member');act(()=>api('POST','/api/attendance',{date:$('attDate').value,service:$('attService').value||'Service',ids}),'Attendance recorded').then(ok=>{if(ok)document.querySelectorAll('.present').forEach(x=>x.checked=false)})}
+async function delAtt(id){if(await askConfirm('Delete this attendance record?'))act(()=>api('DELETE','/api/attendance/'+id),'Record deleted')}
+function exportAttendance(){let rows=[['Date','Service','Member ID','Member Name','Group']];S.attendance.forEach(a=>a.ids.forEach(id=>{let m=S.members.find(x=>x.id===id);if(m)rows.push([a.date,a.service,m.id,m.name,m.group])}));saveFile('attendance.csv',csv(rows))}
+async function addFinance(){const amount=Number($('finAmount').value);if(!amount)return toast('Enter amount');if(await act(()=>api('POST','/api/finance',{date:$('finDate').value,type:$('finType').value,cat:$('finCat').value,amount,desc:$('finDesc').value}),'Transaction saved'))['finAmount','finCat','finDesc'].forEach(i=>$(i).value='')}
+async function delFin(id){if(await askConfirm('Delete this transaction?'))act(()=>api('DELETE','/api/finance/'+id),'Transaction deleted')}
+async function addDoc(){const f=$('docFile').files[0];if(!f)return toast('Choose a file');if(await act(()=>api('POST','/api/documents',{name:f.name,desc:$('docDesc').value}),'Document added')){$('docFile').value='';$('docDesc').value=''}}
+async function delDoc(id){if(await askConfirm('Remove this document from the register?'))act(()=>api('DELETE','/api/documents/'+id),'Document removed')}
+
+/* ---------- users, settings, backup ---------- */
+async function createUser(){const u=$('newUser').value.trim(),p=$('newPass').value;if(!u||!p)return toast('Enter username and password');if(await act(()=>api('POST','/api/users',{username:u,password:p,role:$('newRole').value}),'Account created')){$('newUser').value='';$('newPass').value=''}}
+async function resetUserPass(u){const p=await askPrompt('New temporary password for "'+u+'" (at least 8 characters). They will choose their own at next login.','',true);if(p)act(()=>api('PUT','/api/users/'+encodeURIComponent(u)+'/password',{password:p}),'Password updated')}
+async function delUser(u){if(await askConfirm('Delete user "'+u+'"?'))act(()=>api('DELETE','/api/users/'+encodeURIComponent(u)),'User deleted')}
+function shrinkLogo(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,320/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);let u=c.toDataURL('image/png');if(u.length>400000)u=c.toDataURL('image/jpeg',0.85);res(u)};im.onerror=rej;im.src=r.result};r.onerror=rej;r.readAsDataURL(file)})}
+async function saveSettings(){const body={churchName:$('churchName').value,currency:$('currency').value};const f=$('logoUpload').files[0];if(f){try{body.logo=await shrinkLogo(f)}catch(e){return toast('Could not read that image')}}if(await act(()=>api('PUT','/api/settings',body),'Settings saved'))$('logoUpload').value=''}
+async function backupNow(){try{const r=await fetch('/api/backup',{headers:{'X-Requested-With':'church'},credentials:'same-origin'});if(!r.ok)throw new Error((await r.json()).error);saveFile('church-backup-'+new Date().toISOString().slice(0,10)+'.json',await r.text())}catch(e){toast(e.message||'Backup failed')}}
+$('restoreFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=async()=>{let j;try{j=JSON.parse(rd.result)}catch(x){toast('That file is not a valid backup');return}
+ if(!j||!j.data||!Array.isArray(j.data.members)||j.app!=='churchCMS-server'){toast('That file is not a backup made by this system');return}
+ if(!await askConfirm('Replace everything on the server with the data in this backup? This also replaces staff accounts.'))return;act(()=>api('POST','/api/restore',j),'Backup restored')};rd.readAsText(f);e.target.value=''};
+async function clearData(){if(!isAdmin())return;if(await askConfirm('This erases all members, attendance, finances and documents on the server. Staff accounts and settings stay. Continue?'))act(()=>api('POST','/api/clear',{}),'All records cleared')}
+setInterval(()=>$('clock').textContent=new Date().toLocaleString(),1000);
+window.addEventListener('online',()=>{if(me&&me.kind==='staff')loadState().catch(()=>{})});
+start();
+</script>
+</body></html>
